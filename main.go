@@ -7,6 +7,7 @@ import (
 	"log"
 	"net/http"
 	"os"
+	"strconv"
 	"time"
 
 	"github.com/go-chi/chi"
@@ -92,9 +93,23 @@ func main() {
 	srv := &http.Server{
 		Addr:              ":" + port,
 		Handler:           router,
-		ReadHeaderTimeout: 5 * time.Second,
+		ReadHeaderTimeout: getReadHeaderTimeout(),
 	}
 
 	log.Printf("Serving on port: %s\n", port)
 	log.Fatal(srv.ListenAndServe())
+}
+func getReadHeaderTimeout() time.Duration {
+	timeoutStr := os.Getenv("READ_HEADER_TIMEOUT")
+	if timeoutStr == "" {
+		return 5 * time.Second // Default timeout
+	}
+
+	timeout, err := strconv.Atoi(timeoutStr)
+	if err != nil {
+		log.Printf("Invalid READ_HEADER_TIMEOUT: %v. Using default of 5 seconds", err)
+		return 5 * time.Second
+	}
+
+	return time.Duration(timeout) * time.Second
 }
